@@ -1,8 +1,8 @@
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .models import Contact
-from django.contrib import messages
+from django.contrib.auth import authenticate, logout, login as auth_login
 from django.contrib.auth.models import User
-
 from joblib import load
 
 kidneymodel = load('./savedModels/kidneymodel1.joblib')
@@ -35,7 +35,7 @@ def team(request):
     return render(request,'home/team.html')
 
 def login(request):
-    return render(request, 'home/login.html')
+    return render(request, 'home/my-login.html')
 
 def main(request):
     return render(request, 'home/index.html')
@@ -61,14 +61,10 @@ def heartresult(request):
                                      resting_ecg,max_heart_rate,exercise_induced_angina,ST_Depression,
                                      slope_peak_exercise,major_vessels_count,Thalassemia]])
     if y_pred_rf[0] == 0:
-        y_pred_rf = 'Congrats!!! 🥳 Your Heart is in Good Condition. Prediction with accuracy score 90.16 %'
+        y_pred_rf = 'No Need to worry you are living a healthy life. Prediction with accuracy score 90.16 %'
     elif[1]:
         y_pred_rf = "Consult to doctor related to Heart. Prediction with accuracy score 90.16 %" 
     return render(request,'home/heartresult.html',{'heartresult':y_pred_rf})
-
-
-
-
 
 def kidneyresult(request):
     age = request.POST.get('age')
@@ -102,11 +98,10 @@ def kidneyresult(request):
                 anemia]])
 
     if y_pred[0] == 0:
-        y_pred = "Congrats!!! 🥳 Your Kidneys are in Good Condition. Prediction with accuracy score 97.2 %"
+        y_pred = "No Need to worry you are living a healthy life. Prediction with accuracy score 97.2 %"
     elif y_pred[0] == 1:
         y_pred = "Consult to doctor related to Kidneys. Prediction with accuracy score 97.2 %"
     return render(request, 'home/kidneyresult.html', {'kidneyresult':y_pred})
-
 
 def diebetesresult(request):
     Gender = request.POST.get('Gender')
@@ -125,19 +120,10 @@ def diebetesresult(request):
                                           Low_Density_Lipoprotein,Very_Low_Density_Lipoprotein,Body_Mass_Index]])
     
     if y_pred_dieb[0] == 0:
-        y_pred_dieb = "Congrats!!! 🥳 You Are not having Diebetes. Prediction with accuracy score 98.94 %"
+        y_pred_dieb = "No Need to worry you are living a healthy life. Prediction with accuracy score 98.94 %"
     elif[1]:
-        y_pred_dieb = "Consult to doctor related to Diebetes. Prediction with accuracy score 98.94 %"
+        y_pred_dieb = "Alert you are on risk of diabetes. Consult to Doctor."
     return render(request,'home/diebetesresult.html',{'diebetesresult':y_pred_dieb})
-
-
-
-
-
-
-
-
-
 
 def contact(request):
     if request.method=="POST":
@@ -147,8 +133,38 @@ def contact(request):
         desc = request.POST.get('desc','')
         contact = Contact(name=name, email=email, phone=phone, desc=desc)
         contact.save()
-
     return render(request,'home/contact.html')
 
+# - Register a user
+def SignupPage(request):
+    if request.method=='POST':
+        uname = request.POST.get('username')
+        email = request.POST.get('email')
+        pass1 = request.POST.get('password1')
+        pass2 = request.POST.get('password2')
 
+        if pass1 != pass2:
+            return JsonResponse({"error": "Your password and confirm password are not the same!"}, status=400)
+        else:
+            my_user = User.objects.create_user(uname, email, pass1)
+            my_user.save()
+            return JsonResponse({"success": "User created successfully!"}, status=201)
+    return render(request, 'home/signup.html')
 
+def LoginPage(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        pass1 = request.POST.get('pass')
+        user = authenticate(request, username=username, password=pass1)
+        
+        if user is not None:
+            auth_login(request, user)
+            return JsonResponse({"success": "Login successful!"}, status=200)
+        else:
+            return JsonResponse({"error": "Username or Password is incorrect!"}, status=400)
+
+    return render(request, 'home/login.html')
+
+def LogoutPage(request):
+    logout(request)
+    return redirect('login')

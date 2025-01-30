@@ -244,18 +244,21 @@
       <div class="menu-icon">
         <i class="fa fa-bars fa-2x"></i>
       </div>
-      <!-- <div class="logoimg" id="heartimg">
-        <img src="/static//image/image.png" alt="">
-      </div> -->
       <div class="logo">
-        <a href="/">We'll Scan</a>
+        <a href="/index">We'll Scan</a>
       </div>
       <div class="menu">
         <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/diet">Diet Chart</a></li>
-          <li><a href="/about">About Us</a></li>
-          <li><a href="/contact">Contact Us</a></li>
+          {% if user.is_authenticated %}
+              <li>Hello, {{ user.username }}!</li>
+              <li><a href="/index">Home</a></li>
+              <li><a href="/diet">Diet Chart</a></li>
+              <li><a href="/about">About Us</a></li>
+              <li><a href="/contact">Contact Us</a></li>
+              <li><a href="/login">Logout</a></li>
+          {% else %}
+              <p>You are not logged in. <a href="{% url 'login' %}">Login here</a></p>
+          {% endif %}
         </ul>
       </div>
     </nav>
